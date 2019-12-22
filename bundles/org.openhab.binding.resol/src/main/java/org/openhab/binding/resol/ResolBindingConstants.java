@@ -8,12 +8,13 @@
  */
 package org.openhab.binding.resol;
 
+import java.util.Collections;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.smarthome.core.thing.ThingTypeUID;
-
-import com.google.common.collect.ImmutableSet;
 
 /**
  * The {@link ResolBindingConstants} class defines common constants, which are
@@ -39,9 +40,10 @@ public class ResolBindingConstants {
 
     public static final ThingTypeUID THING_TYPE_UID_DEVICE = new ThingTypeUID(BINDING_ID, THING_ID_DEVICE);
 
-    public static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = ImmutableSet.of(THING_TYPE_UID_BRIDGE,
-            THING_TYPE_UID_DEVICE);
+    public static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Collections
+            .unmodifiableSet(Stream.of(THING_TYPE_UID_BRIDGE, THING_TYPE_UID_DEVICE).collect(Collectors.toSet()));
 
-    public static final Set<ThingTypeUID> SUPPORTED_BRIDGE_THING_TYPES_UIDS = ImmutableSet.of(THING_TYPE_UID_BRIDGE);
+    public static final Set<ThingTypeUID> SUPPORTED_BRIDGE_THING_TYPES_UIDS = Collections
+            .unmodifiableSet(Stream.of(THING_TYPE_UID_BRIDGE).collect(Collectors.toSet()));
 
 }

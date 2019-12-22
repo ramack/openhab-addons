@@ -17,6 +17,6 @@
 	name="org.openhab.binding.resol.internal.providers.ResolChannelTypeProvider">
 	<implementation class="org.openhab.binding.resol.internal.providers.ResolChannelTypeProvider" />
 	<service>
-		<provide interface="org.eclipse.smarthome.core.thing.type.ChannelTypeProvider" />
+		<provide interface="org.openhab.core.thing.type.ChannelTypeProvider" />
 	</service>
 </scr:component>

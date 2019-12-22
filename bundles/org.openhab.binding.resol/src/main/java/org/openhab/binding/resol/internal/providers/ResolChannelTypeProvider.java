@@ -54,7 +54,7 @@ public class ResolChannelTypeProvider implements ChannelTypeProvider {
     }
 
     @Override
-    public @Nullable Collection<@NonNull ChannelType> getChannelTypes(@Nullable Locale locale) {
+    public Collection<@NonNull ChannelType> getChannelTypes(@Nullable Locale locale) {
         return channelTypes.values();
     }
 
@@ -70,12 +70,6 @@ public class ResolChannelTypeProvider implements ChannelTypeProvider {
     @Override
     public @Nullable ChannelGroupType getChannelGroupType(@NonNull ChannelGroupTypeUID channelGroupTypeUID,
             @Nullable Locale locale) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public @Nullable Collection<@NonNull ChannelGroupType> getChannelGroupTypes(@Nullable Locale locale) {
         // TODO Auto-generated method stub
         return null;
     }

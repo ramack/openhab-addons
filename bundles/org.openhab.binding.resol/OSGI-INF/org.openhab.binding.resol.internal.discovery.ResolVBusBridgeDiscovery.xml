@@ -4,6 +4,6 @@
     name="org.openhab.binding.resol.internal.discovery">
    <implementation class="org.openhab.binding.resol.internal.discovery.ResolVBusBridgeDiscovery"/>
    <service>
-      <provide interface="org.eclipse.smarthome.config.discovery.DiscoveryService"/>
+      <provide interface="org.openhab.config.discovery.DiscoveryService"/>
    </service>
 </scr:component>
