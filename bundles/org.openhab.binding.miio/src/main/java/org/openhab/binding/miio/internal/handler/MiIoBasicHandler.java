@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
 import javax.measure.Unit;
@@ -53,7 +54,7 @@ import org.openhab.core.library.types.PercentType;
 import org.openhab.core.library.types.QuantityType;
 import org.openhab.core.library.types.StringType;
 import org.openhab.core.library.unit.SIUnits;
-import org.openhab.core.library.unit.SmartHomeUnits;
+import org.openhab.core.library.unit.Units;
 import org.openhab.core.thing.Channel;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.Thing;
@@ -134,7 +135,7 @@ public class MiIoBasicHandler extends MiIoAbstractHandler {
         }
         logger.debug("Locating action for {} channel '{}': '{}'", getThing().getUID(), channelUID.getId(), command);
         if (!actions.isEmpty()) {
-            MiIoBasicChannel miIoBasicChannel = actions.get(channelUID);
+            final MiIoBasicChannel miIoBasicChannel = actions.get(channelUID);
             if (miIoBasicChannel != null) {
                 int valuePos = 0;
                 for (MiIoDeviceAction action : miIoBasicChannel.getActions()) {
@@ -254,8 +255,8 @@ public class MiIoBasicHandler extends MiIoAbstractHandler {
             } else {
                 logger.debug("Channel Id {} not in mapping.", channelUID.getId());
                 if (logger.isTraceEnabled()) {
-                    for (ChannelUID a : actions.keySet()) {
-                        logger.trace("Available entries: {} : {}", a, actions.get(a).getFriendlyName());
+                    for (Entry<ChannelUID, MiIoBasicChannel> a : actions.entrySet()) {
+                        logger.trace("Available entries: {} : {}", a.getKey(), a.getValue().getFriendlyName());
                     }
                 }
             }
@@ -411,6 +412,13 @@ public class MiIoBasicHandler extends MiIoAbstractHandler {
             actions = new HashMap<>();
             final MiIoBasicDevice device = this.miioDevice;
             if (device != null) {
+                for (Channel cn : getThing().getChannels()) {
+                    logger.trace("Channel '{}' for thing {} already exist... removing", cn.getUID(),
+                            getThing().getUID());
+                    if (!PERSISTENT_CHANNELS.contains(cn.getUID().getId().toString())) {
+                        thingBuilder.withoutChannels(cn);
+                    }
+                }
                 for (MiIoBasicChannel miChannel : device.getDevice().getChannels()) {
                     logger.debug("properties {}", miChannel);
                     if (!miChannel.getType().isEmpty()) {
@@ -454,13 +462,6 @@ public class MiIoBasicHandler extends MiIoAbstractHandler {
             return null;
         }
         ChannelUID channelUID = new ChannelUID(getThing().getUID(), channel);
-
-        // TODO: Need to understand if this harms anything. If yes, channel only to be added when not there already.
-        // current way allows to have no issues when channels are changing.
-        if (getThing().getChannel(channel) != null) {
-            logger.info("Channel '{}' for thing {} already exist... removing", channel, getThing().getUID());
-            thingBuilder.withoutChannel(new ChannelUID(getThing().getUID(), channel));
-        }
         ChannelBuilder newChannel = ChannelBuilder.create(channelUID, dataType).withLabel(miChannel.getFriendlyName());
         boolean useGeneratedChannelType = false;
         if (!miChannel.getChannelType().isBlank()) {
@@ -606,14 +607,13 @@ public class MiIoBasicHandler extends MiIoAbstractHandler {
                 updateState(basicChannel.getChannel(), new QuantityType<>(val.getAsBigDecimal(), SIUnits.CELSIUS));
                 break;
             case "electriccurrent":
-                updateState(basicChannel.getChannel(),
-                        new QuantityType<>(val.getAsBigDecimal(), SmartHomeUnits.AMPERE));
+                updateState(basicChannel.getChannel(), new QuantityType<>(val.getAsBigDecimal(), Units.AMPERE));
                 break;
             case "energy":
-                updateState(basicChannel.getChannel(), new QuantityType<>(val.getAsBigDecimal(), SmartHomeUnits.WATT));
+                updateState(basicChannel.getChannel(), new QuantityType<>(val.getAsBigDecimal(), Units.WATT));
                 break;
             case "time":
-                updateState(basicChannel.getChannel(), new QuantityType<>(val.getAsBigDecimal(), SmartHomeUnits.HOUR));
+                updateState(basicChannel.getChannel(), new QuantityType<>(val.getAsBigDecimal(), Units.HOUR));
                 break;
             default:
                 updateState(basicChannel.getChannel(), new DecimalType(val.getAsBigDecimal()));
@@ -642,19 +642,21 @@ public class MiIoBasicHandler extends MiIoAbstractHandler {
                 default:
                     if (refreshListCustomCommands.containsKey(response.getMethod())) {
                         logger.debug("Processing custom refresh command response for !{}", response.getMethod());
-                        MiIoBasicChannel ch = refreshListCustomCommands.get(response.getMethod());
-                        if (response.getResult().isJsonArray()) {
-                            JsonArray cmdResponse = response.getResult().getAsJsonArray();
-                            final String transformation = ch.getTransfortmation();
-                            if (transformation == null || transformation.isBlank()) {
-                                updateChannel(ch, ch.getChannel(),
-                                        cmdResponse.get(0).isJsonPrimitive() ? cmdResponse.get(0)
-                                                : new JsonPrimitive(cmdResponse.get(0).toString()));
+                        final MiIoBasicChannel ch = refreshListCustomCommands.get(response.getMethod());
+                        if (ch != null) {
+                            if (response.getResult().isJsonArray()) {
+                                JsonArray cmdResponse = response.getResult().getAsJsonArray();
+                                final String transformation = ch.getTransfortmation();
+                                if (transformation == null || transformation.isBlank()) {
+                                    JsonElement response0 = cmdResponse.get(0);
+                                    updateChannel(ch, ch.getChannel(), response0.isJsonPrimitive() ? response0
+                                            : new JsonPrimitive(response0.toString()));
+                                } else {
+                                    updateChannel(ch, ch.getChannel(), cmdResponse);
+                                }
                             } else {
-                                updateChannel(ch, ch.getChannel(), cmdResponse);
+                                updateChannel(ch, ch.getChannel(), new JsonPrimitive(response.getResult().toString()));
                             }
-                        } else {
-                            updateChannel(ch, ch.getChannel(), new JsonPrimitive(response.getResult().toString()));
                         }
                     }
                     break;

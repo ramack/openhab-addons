@@ -27,7 +27,7 @@
     <!-- automation -->
 
     <module>org.openhab.automation.groovyscripting</module>
-
+    <module>org.openhab.automation.jythonscripting</module>
     <!-- io -->
 
     <module>org.openhab.io.homekit</module>
@@ -39,8 +39,6 @@
     <module>org.openhab.io.neeo</module>
 
     <module>org.openhab.io.openhabcloud</module>
-
-    <module>org.openhab.io.transport.modbus</module>
 
     <!-- transformations -->
 
